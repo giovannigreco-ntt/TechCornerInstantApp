@@ -1,1 +1,1 @@
-include ':featureRecordVideo', ':app', ':base', ':instantappRecordVideo'
+include ':featureRecordVideo', ':app', ':base', ':instantappRecordVideo', ':featurefullapp'

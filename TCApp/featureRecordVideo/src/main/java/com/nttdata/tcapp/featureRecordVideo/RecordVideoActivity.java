@@ -25,6 +25,10 @@ import android.widget.Toast;
 import com.google.android.gms.common.util.IOUtils;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -92,7 +96,7 @@ public class RecordVideoActivity extends AppCompatActivity {
 
     private void startVideoRecording() {
 
-        Intent cameraIntent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
+        Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (cameraIntent.resolveActivity(getPackageManager()) != null) {
 //            startActivityForResult(cameraIntent, PICK_VIDEO_REQUEST);
 
@@ -145,13 +149,43 @@ public class RecordVideoActivity extends AppCompatActivity {
 //                if(imgFile.exists()) {
 //                    image.setImageURI(Uri.fromFile(imgFile));
 //                }
-                addToCloudStorage();
+                signIn();
             }
         }
     }
 
 
+    private FirebaseAuth mAuth;
+    private void signIn() {
+        mAuth = FirebaseAuth.getInstance();
+        FirebaseUser user = mAuth.getCurrentUser();
+        if (user != null) {
+            addToCloudStorage();
+        } else {
+            log("NO USER! ");
+            signInAnonymously();
+        }
+    }
+
+    private void signInAnonymously(){
+        mAuth.signInAnonymously().addOnSuccessListener(this, new OnSuccessListener<AuthResult>() {
+            @Override public void onSuccess(AuthResult authResult) {
+                log("Signed in! ");
+
+                addToCloudStorage();
+            }
+        }) .addOnFailureListener(this, new OnFailureListener() {
+            @Override public void onFailure(@NonNull Exception exception) {
+                Log.e("TAG", "signInAnonymously:FAILURE", exception);
+                log("sign in failed " + exception.getMessage());
+            }
+        });
+    }
+
     private void addToCloudStorage() {
+
+        log("uploading...");
+
         File f = new File(pictureFilePath);
         Uri picUri = Uri.fromFile(f);
         final String cloudFilePath = picUri.getLastPathSegment();
@@ -163,6 +197,7 @@ public class RecordVideoActivity extends AppCompatActivity {
         uploadeRef.putFile(picUri).addOnFailureListener(new OnFailureListener(){
             public void onFailure(@NonNull Exception exception){
                 Log.e("addToCloudStorage","Failed to upload picture to cloud storage");
+                log("Uploade failed :( " + exception.getMessage());
             }
         }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>(){
             @Override
@@ -170,6 +205,7 @@ public class RecordVideoActivity extends AppCompatActivity {
                 Toast.makeText(RecordVideoActivity.this,
                         "Image has been uploaded to cloud storage",
                         Toast.LENGTH_SHORT).show();
+                log("Video Uploaded :)");
             }
         });
     }

@@ -26,6 +26,7 @@ dependencies {
     application project(':app')
     feature project(':featureRecordVideo')
 
+    feature project(":featurefullapp")
 }
 
 apply plugin: 'com.google.gms.google-services'

@@ -1,0 +1,59 @@
+{
+  "project_info": {
+    "project_number": "1023571760963",
+    "firebase_url": "https://instantapptechcorner.firebaseio.com",
+    "project_id": "instantapptechcorner",
+    "storage_bucket": "instantapptechcorner.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1023571760963:android:fefa289f718dbbeb",
+        "android_client_info": {
+          "package_name": "com.nttdata.tcapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1023571760963-isasvf90inkfldhg581vrt9cir28lg74.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.nttdata.tcapp",
+            "certificate_hash": "cba47c66ba2d751ff8f698e6447f340007e71fcf"
+          }
+        },
+        {
+          "client_id": "1023571760963-0n6grp4k6aafopk8ni5lcea4fgnmaso1.apps.googleusercontent.com",
+          "client_type": 3
+        },
+        {
+          "client_id": "1023571760963-0n6grp4k6aafopk8ni5lcea4fgnmaso1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCT0Jt6TL9C_mKaHEAxHFzT33OmtkeNxqU"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1023571760963-0n6grp4k6aafopk8ni5lcea4fgnmaso1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
