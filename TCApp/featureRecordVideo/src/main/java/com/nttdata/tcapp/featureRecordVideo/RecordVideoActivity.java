@@ -17,6 +17,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -30,6 +31,7 @@ import com.google.firebase.storage.UploadTask;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -39,6 +41,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class RecordVideoActivity extends AppCompatActivity {
@@ -49,6 +52,8 @@ public class RecordVideoActivity extends AppCompatActivity {
     private TextView consoleTV;
 
     private StorageReference mStorageRef;
+
+    private String pictureFilePath;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,7 +92,29 @@ public class RecordVideoActivity extends AppCompatActivity {
 
     private void startVideoRecording() {
 
-        startActivityForResult(new Intent(MediaStore.ACTION_VIDEO_CAPTURE), PICK_VIDEO_REQUEST);
+        Intent cameraIntent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
+        if (cameraIntent.resolveActivity(getPackageManager()) != null) {
+//            startActivityForResult(cameraIntent, PICK_VIDEO_REQUEST);
+
+            File pictureFile = null;
+            try {
+                pictureFile = createFile();
+            } catch (IOException ex) {
+                Toast.makeText(this,
+                        "Video file can't be created, please try again",
+                        Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (pictureFile != null) {
+                Uri photoURI = FileProvider.getUriForFile(this,
+                        "tcapp.provider",
+                        pictureFile);
+                cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+                startActivityForResult(cameraIntent, PICK_VIDEO_REQUEST);
+            }
+        }
+
+
     }
 
     @Override
@@ -114,94 +141,52 @@ public class RecordVideoActivity extends AppCompatActivity {
         if (resultCode == RESULT_OK) {
             if (requestCode == PICK_VIDEO_REQUEST) {
                 log("Video recorded");
-                Uri selectedVideoUri = data.getData();
-
-                try {
-                    uploadData(getContentResolver().openInputStream(selectedVideoUri));
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                }
+                File imgFile = new  File(pictureFilePath);
+//                if(imgFile.exists()) {
+//                    image.setImageURI(Uri.fromFile(imgFile));
+//                }
+                addToCloudStorage();
             }
         }
     }
 
 
+    private void addToCloudStorage() {
+        File f = new File(pictureFilePath);
+        Uri picUri = Uri.fromFile(f);
+        final String cloudFilePath = picUri.getLastPathSegment();
 
-    private void uploadData(Uri videoUri) {
+        FirebaseStorage firebaseStorage = FirebaseStorage.getInstance();
+        StorageReference storageRef = firebaseStorage.getReference();
+        StorageReference uploadeRef = storageRef.child(cloudFilePath);
 
-
-        StorageReference riversRef = mStorageRef.child("video_"+new Date());
-
-        riversRef.putFile(videoUri)
-                .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                    @Override
-                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                        // Get a URL to the uploaded content
-
-                        log("VIDEO UPLOADED :)");
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception exception) {
-                        // Handle unsuccessful uploads
-                        // ...
-                        log("VIDEO UPLOAD FAILED :(");
-                    }
-                });
-    }
-
-    private void uploadData(InputStream inputStream) {
-
-        File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/video");
-
-        try {
-
-            OutputStream output = new FileOutputStream(file);
-            byte[] buffer = new byte[4 * 1024]; // or other buffer size
-            int read;
-
-            while ((read = inputStream.read(buffer)) != -1) {
-                output.write(buffer, 0, read);
+        uploadeRef.putFile(picUri).addOnFailureListener(new OnFailureListener(){
+            public void onFailure(@NonNull Exception exception){
+                Log.e("addToCloudStorage","Failed to upload picture to cloud storage");
             }
-
-            output.flush();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                inputStream.close();
-            } catch (IOException e) {
-                e.printStackTrace();
+        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>(){
+            @Override
+            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot){
+                Toast.makeText(RecordVideoActivity.this,
+                        "Image has been uploaded to cloud storage",
+                        Toast.LENGTH_SHORT).show();
             }
-        }
-
-
-
-
-        StorageReference riversRef = mStorageRef.child("video_"+new Date());
-
-        riversRef.putFile(Uri.fromFile(file))
-                .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                    @Override
-                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                        log("VIDEO UPLOADED :)");
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        log("VIDEO UPLOAD FAILED :(");
-                    }
-                });
+        });
     }
 
     private void log(String log) {
 
         consoleTV.setText(log);
 
+    }
+
+    private File createFile() throws IOException {
+        String timeStamp = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
+        String pictureFile = "video_" + timeStamp;
+        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        File image = File.createTempFile(pictureFile,  ".3gp", storageDir);
+        pictureFilePath = image.getAbsolutePath();
+        return image;
     }
 
 
