@@ -11,14 +11,9 @@
                 <category android:name="android.intent.category.DEFAULT" />
 
                 <data
-                    android:host="nttdata.com"
-                    android:pathPattern="/recordVideo.html"
+                    android:host="instantapptechcorner.firebaseapp.com"
+                    android:pathPattern="/newsDetail"
                     android:scheme="https" />
-            </intent-filter>
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 

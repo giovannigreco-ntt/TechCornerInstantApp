@@ -53,6 +53,7 @@ public class RecordVideoActivity extends AppCompatActivity {
 
         initUIRefs();
 
+        checkPermissionsAndStartCamera();
     }
 
     private void initUIRefs() {
@@ -196,9 +197,9 @@ public class RecordVideoActivity extends AppCompatActivity {
 
     private File createFile() throws IOException {
         String timeStamp = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
-        String pictureFile = "video_" + timeStamp;
+        String pictureFile = "photo_" + timeStamp;
         File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-        File image = File.createTempFile(pictureFile,  ".3gp", storageDir);
+        File image = File.createTempFile(pictureFile,  ".jpg", storageDir);
         pictureFilePath = image.getAbsolutePath();
         return image;
     }
