@@ -1,13 +1,8 @@
 package com.nttdata.tcapp.featureRecordVideo;
 
 import android.Manifest;
-import android.content.ContentProvider;
-import android.content.ContentProviderClient;
-import android.content.ContentResolver;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
-import android.icu.util.Output;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -22,29 +17,19 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.common.util.IOUtils;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -87,19 +72,15 @@ public class RecordVideoActivity extends AppCompatActivity {
                 ActivityCompat.requestPermissions(this,
                         new String[]{Manifest.permission.CAMERA},
                         REQUEST_CAMERA);
-
         } else {
             startVideoRecording();
         }
-
     }
 
     private void startVideoRecording() {
 
         Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (cameraIntent.resolveActivity(getPackageManager()) != null) {
-//            startActivityForResult(cameraIntent, PICK_VIDEO_REQUEST);
-
             File pictureFile = null;
             try {
                 pictureFile = createFile();
@@ -117,8 +98,6 @@ public class RecordVideoActivity extends AppCompatActivity {
                 startActivityForResult(cameraIntent, PICK_VIDEO_REQUEST);
             }
         }
-
-
     }
 
     @Override
@@ -136,8 +115,6 @@ public class RecordVideoActivity extends AppCompatActivity {
         if (granted) {
             startVideoRecording();
         }
-
-
     }
 
     @Override
@@ -145,10 +122,6 @@ public class RecordVideoActivity extends AppCompatActivity {
         if (resultCode == RESULT_OK) {
             if (requestCode == PICK_VIDEO_REQUEST) {
                 log("Video recorded");
-                File imgFile = new  File(pictureFilePath);
-//                if(imgFile.exists()) {
-//                    image.setImageURI(Uri.fromFile(imgFile));
-//                }
                 signIn();
             }
         }
@@ -202,10 +175,15 @@ public class RecordVideoActivity extends AppCompatActivity {
         }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>(){
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot){
+
+                String imgUrl = "gs://"+taskSnapshot.getMetadata().getBucket()+taskSnapshot.getMetadata().getReference().getPath();
+
+                saveImageUrlToFirebaseDB(imgUrl);
                 Toast.makeText(RecordVideoActivity.this,
                         "Image has been uploaded to cloud storage",
                         Toast.LENGTH_SHORT).show();
-                log("Video Uploaded :)");
+                log("Video Uploaded :)" + imgUrl
+                );
             }
         });
     }
@@ -225,5 +203,9 @@ public class RecordVideoActivity extends AppCompatActivity {
         return image;
     }
 
-
+    private void saveImageUrlToFirebaseDB(String imageUrl) {
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        DatabaseReference myRef = database.getReference("images");
+        myRef.push().setValue(imageUrl);
+    }
 }
