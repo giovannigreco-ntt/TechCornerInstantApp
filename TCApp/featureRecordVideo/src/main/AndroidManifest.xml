@@ -13,7 +13,7 @@
                 <data
                     android:host="instantapptechcorner.firebaseapp.com"
                     android:pathPattern="/newsDetail"
-                    android:scheme="https" />
+                    android:scheme="https|http" />
             </intent-filter>
         </activity>
 
